@@ -69,7 +69,22 @@ public class HfrdApi {
 
         // NTAG
         int TyA_NTAG_AnticollSelect(long device, byte[] pSnr, byte[] pLen);
+
         int TyA_NTAG_GetVersion(long device, byte[] pData, byte[] pLen);
+
+        int TyA_NTAG_Read(long device, byte addr, byte[] pData, byte[] pLen);
+
+        int TyA_NTAG_FastRead(long device, byte startAddr, byte endAddr, byte[] pData, byte[] pLen);
+
+        int TyA_NTAG_Write(long device, byte addr, byte[] pdata);
+
+        int TyA_NTAG_CompWrite(long device, byte addr, byte[] pData);
+
+        int TyA_NTAG_ReadCnt(long device, byte addr, byte[] pData, byte[] pLen);
+
+        int TyA_NTAG_PwdAuth(long device, byte[] pPwd, byte[] pData, byte[] pLen);
+
+        int TyA_NTAG_ReadSig(long device, byte addr, byte[] pData, byte[] pLen);
     }
 
     public static long connect(long deviceId) {
@@ -304,6 +319,8 @@ public class HfrdApi {
         byte snr[] = new byte[16];
         byte len[] = new byte[1];
         byte sak[] = new byte[1];
+        byte data[] = new byte[32];
+
 
         // deviceId = connect(deviceId);
         if (deviceId >= 0) {
@@ -318,9 +335,36 @@ public class HfrdApi {
                     str = str + String.format("%02X", snr[i]);
                 }
                 sn = str;
+
+
+                status = HrfdLib.INSTANCE.TyA_NTAG_GetVersion(deviceId, data, len);
+                if (status != 0) {
+                    logger.error("read TyA_NTAG_GetVersion error: " + status);
+                } else {
+                    str = "";
+                    for (int i = 0; i < (int) len[0]; i++) {
+                        str = str + String.format("%02X", data[i]);
+                    }
+                    logger.trace("NTAG version: " + str);
+                }
             }
         }
 
         return sn;
+    }
+
+    public static String readData(long deviceId) {
+        if (deviceId >= 0) {
+
+        }
+        return null;
+    }
+
+    public static boolean writeData(long deviceId, String data) {
+        return false;
+    }
+
+    public static boolean writeData(long deviceId, byte[] data) {
+        return false;
     }
 }
