@@ -227,7 +227,7 @@ public class HfrdApi {
         }
     }
 
-    public static void beep(long deviceId) {
+    public static void beep() {
         int status = 0;
         deviceId = connect();
         if (deviceId >= 0) {
@@ -275,7 +275,7 @@ public class HfrdApi {
                     if (TagType[0] == 68) {
                         sn = readNTAGSerialNumber(deviceId);
                         if (sn != null) {
-                            beep(deviceId);
+                            //beep();
                             changeLED(LED.LED_GREEN, false);
                         }
                         return sn;
@@ -291,7 +291,7 @@ public class HfrdApi {
                             }
                         } else {
                             logger.trace("anticollision len: " + len[0]);
-                            beep(deviceId);
+                            //beep(deviceId);
                             changeLED(LED.LED_GREEN, false);
                             String str = "";
                             for (int i = 0; i < (int) len[0]; i++) {
@@ -360,7 +360,7 @@ public class HfrdApi {
             if (status != 0) {
                 logger.error("TyA_NTAG_Read error: " + status);
             } else {
-                logger.trace("len: " + len);
+                logger.trace("len: " + len[0]);
                 String str = "";
                 for (int i = 0; i < (int) len[0]; i++) {
                     str = str + String.format("%02X", data[i]);
@@ -372,10 +372,12 @@ public class HfrdApi {
     }
 
 
-
     public static String fastRead(byte startAddr, byte stopAddr) {
         String dataString = null;
-        byte[] data = new byte[4*(stopAddr - startAddr + 1)];
+        byte[] data = new byte[4 * (stopAddr - startAddr + 1)];
+        for (int i = 0; i < data.length; i++) {
+            data[i] = 0;
+        }
         byte[] len = new byte[1];
         int status;
         if (deviceId >= 0) {
@@ -383,7 +385,7 @@ public class HfrdApi {
             if (status != 0) {
                 logger.error("TyA_NTAG_Read error: " + status);
             } else {
-                logger.trace("len: " + len);
+                logger.trace("len: " + len[0]);
                 String str = "";
                 for (int i = 0; i < (int) len[0]; i++) {
                     str = str + String.format("%02X", data[i]);
@@ -395,11 +397,38 @@ public class HfrdApi {
     }
 
 
-    public static boolean writeData(long deviceId, String data) {
+    public static boolean writeData(String data) {
         return false;
     }
 
-    public static boolean writeData(long deviceId, byte[] data) {
+    public static boolean writeData(byte[] data) {
         return false;
+    }
+
+
+    public static int readCount() {
+        byte[] data = new byte[3];
+        byte[] len = new byte[1];
+        int status;
+        String serialNumber = HfrdApi.requestCard();
+        logger.trace("serialNumber: " + serialNumber);
+        if (serialNumber == null) {
+            logger.error("read requestCard error");
+            return -1;
+        } else {
+            status = HrfdLib.INSTANCE.TyA_NTAG_ReadCnt(deviceId, (byte)0x02, data, len);
+            if (status != 0) {
+                logger.error("TyA_NTAG_ReadCnt error: " + status);
+                return -2;
+            } else {
+                logger.trace("len: " + len[0]);
+                String str = "";
+                for (int i = 0; i < (int) len[0]; i++) {
+                    str = str + String.format("%02X", data[i]);
+                }
+                logger.trace("count: " + str);
+            }
+            return 0;
+        }
     }
 }

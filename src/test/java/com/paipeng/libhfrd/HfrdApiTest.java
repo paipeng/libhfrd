@@ -94,6 +94,7 @@ class HfrdApiTest {
     @Test
     void fastRead() {
         String serialNumber = HfrdApi.requestCard();
+        logger.trace("serialNumber: " + serialNumber);
         if (serialNumber == null) {
             logger.error("read requestCard error");
             return;
@@ -103,11 +104,18 @@ class HfrdApiTest {
             // NTAG 216 0xE6  error
             //for (byte b = -127; b < 128; b++) {
             byte b = 0x00;
-            byte b2 = 0x03;
+            byte b2 = 0x0F;
+            // max size: 16 blocks (4 bytes/block)
             String data = HfrdApi.fastRead(b, b2);
             System.out.println("data: " + data + " addr: " + b);
         }
         boolean result = HfrdApi.close();
         Assertions.assertTrue(result);
+    }
+
+    @Test
+    void readCount() {
+        int readCount = HfrdApi.readCount();
+        logger.trace("readCount: " + readCount);
     }
 }
