@@ -11,6 +11,7 @@ public class HfrdApi {
 
     public static Logger logger = LoggerFactory.getLogger(HfrdApi.class);
     private static final String LIB_NAME = "hfrdapi";
+    public static long deviceId = -1;
 
     private static void setupNativeLibrary() {
         logger.trace("setupNativeLibrary");
@@ -87,7 +88,7 @@ public class HfrdApi {
         int TyA_NTAG_ReadSig(long device, byte addr, byte[] pData, byte[] pLen);
     }
 
-    public static long connect(long deviceId) {
+    public static long connect() {
         int status;
         boolean bStatus;
         long[] deviceIds = new long[]{-1};
@@ -167,7 +168,7 @@ public class HfrdApi {
         return deviceIds[0];
     }
 
-    public static boolean close(long deviceId) {
+    public static boolean close() {
         int status;
         boolean bStatus;
         long[] deviceIds = new long[]{-1};
@@ -191,16 +192,16 @@ public class HfrdApi {
         }
     }
 
-    public static String getVersion(long deviceId) {
+    public static String getVersion() {
         String version;
         int[] v = new int[3];
 
-        deviceId = connect(deviceId);
+        deviceId = connect();
         if (deviceId >= 0) {
             HrfdLib.INSTANCE.Sys_GetLibVersion(v);
             logger.trace("version: " + v[0] + "." + v[1] + "." + v[2]);
             version = v[0] + "." + v[1] + "." + v[2];
-            close(deviceId);
+            close();
         } else {
             version = null;
         }
@@ -214,22 +215,21 @@ public class HfrdApi {
      * // color 2: LED ON GREEN
      * // color 3: LED ON ORANGE (RED/YELLOW)
      *
-     * @param deviceId
      * @param color
      */
-    public static void changeLED(long deviceId, LED color, boolean close) {
-        deviceId = connect(deviceId);
+    public static void changeLED(LED color, boolean close) {
+        deviceId = connect();
         if (deviceId >= 0) {
             HrfdLib.INSTANCE.Sys_SetLight(deviceId, (byte) color.ordinal());
             if (close) {
-                close(deviceId);
+                close();
             }
         }
     }
 
     public static void beep(long deviceId) {
         int status = 0;
-        deviceId = connect(deviceId);
+        deviceId = connect();
         if (deviceId >= 0) {
             //==================== Success Tips ====================
             //Beep 200 ms 20
@@ -241,7 +241,7 @@ public class HfrdApi {
         }
     }
 
-    public static String requestCard(long deviceId) {
+    public static String requestCard() {
         String sn = null;
         int status = 0;
         byte mode = 0x52;
@@ -252,10 +252,10 @@ public class HfrdApi {
         byte len[] = new byte[1];
         byte sak[] = new byte[1];
 
-        deviceId = connect(deviceId);
+        deviceId = connect();
         if (deviceId >= 0) {
             while (true) {
-                changeLED(deviceId, LED.LED_RED, false);
+                changeLED(LED.LED_RED, false);
                 //Request card
                 try {
                     status = HrfdLib.INSTANCE.TyA_Request(deviceId, mode, TagType);//search all card
@@ -264,7 +264,7 @@ public class HfrdApi {
                 }
                 if (status != 0) {
                     logger.error("TyA_Request failed: " + status);
-                    changeLED(deviceId, LED.LED_ORANGE, false);
+                    changeLED(LED.LED_ORANGE, false);
                     try {
                         Thread.sleep(2000);
                     } catch (InterruptedException e) {
@@ -276,14 +276,14 @@ public class HfrdApi {
                         sn = readNTAGSerialNumber(deviceId);
                         if (sn != null) {
                             beep(deviceId);
-                            changeLED(deviceId, LED.LED_GREEN, false);
+                            changeLED(LED.LED_GREEN, false);
                         }
                         return sn;
                     } else {
                         //Anticollision
                         status = HrfdLib.INSTANCE.TyA_Anticollision(deviceId, bcnt, snr, len);//return serial number of card
                         if (status != 0 || len[0] != 4) {
-                            changeLED(deviceId, LED.LED_ORANGE, false);
+                            changeLED(LED.LED_ORANGE, false);
                             logger.error("TyA_Anticollision failed !");
                             try {
                                 Thread.sleep(1000);
@@ -292,7 +292,7 @@ public class HfrdApi {
                         } else {
                             logger.trace("anticollision len: " + len[0]);
                             beep(deviceId);
-                            changeLED(deviceId, LED.LED_GREEN, false);
+                            changeLED(LED.LED_GREEN, false);
                             String str = "";
                             for (int i = 0; i < (int) len[0]; i++) {
                                 str = str + String.format("%02X", snr[i]);
@@ -350,7 +350,7 @@ public class HfrdApi {
         return sn;
     }
 
-    public static String read(long deviceId, byte addr) {
+    public static String read(byte addr) {
         String dataString = null;
         byte[] data = new byte[16];
         byte[] len = new byte[1];

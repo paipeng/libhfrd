@@ -2,12 +2,15 @@ package com.paipeng.libhfrd;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class HfrdApiTest {
+    public static Logger logger = LoggerFactory.getLogger(HfrdApiTest.class);
 
     @Test
     public void testConnect() {
-        long deviceId = HfrdApi.connect(-1L);
+        long deviceId = HfrdApi.connect();
         Assertions.assertTrue(deviceId >= 0);
 
         try {
@@ -15,13 +18,13 @@ class HfrdApiTest {
         } catch (InterruptedException e) {
         }
 
-        boolean result = HfrdApi.close(deviceId);
+        boolean result = HfrdApi.close();
         Assertions.assertTrue(result);
     }
 
     @Test
     void getVersion() {
-        String version = HfrdApi.getVersion(-1L);
+        String version = HfrdApi.getVersion();
         System.out.println("version: " + version);
     }
 
@@ -35,19 +38,17 @@ class HfrdApiTest {
 
     @Test
     void changeLED() {
-        long deviceId = -1L;
         byte color = 2;
         // color 0: LED OFF
         // color 1: LED ON RED
         // color 2: LED ON GREEN
         // color 3: LED ON ORANGE (RED/YELLOW)
-        HfrdApi.changeLED(deviceId, HfrdApi.LED.LED_RED, true);
+        HfrdApi.changeLED(HfrdApi.LED.LED_RED, true);
     }
 
     @Test
     void requestCard() {
-        long deviceId = -1L;
-        String serialNumber = HfrdApi.requestCard(deviceId);
+        String serialNumber = HfrdApi.requestCard();
         System.out.println("serialNumber: " + serialNumber);
     }
 
@@ -61,23 +62,26 @@ class HfrdApiTest {
 
     @Test
     void read() {
-        long deviceId = HfrdApi.connect(-1L);
-        Assertions.assertTrue(deviceId >= 0);
-
-        // HfrdApi.beep(deviceId);
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
+        String serialNumber = HfrdApi.requestCard();
+        if (serialNumber == null) {
+            logger.error("read requestCard error");
+            return;
+        } else {
+            // HfrdApi.beep(deviceId);
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+            }
+            // NTAG 213 0x2C  error 23
+            // NTAG 215 0x86  error
+            // NTAG 216 0xE6  error
+            //for (byte b = -127; b < 128; b++) {
+            byte b = 0x04;
+            String data = HfrdApi.read(b);
+            System.out.println("data: " + data + " addr: " + b);
         }
-        // NTAG 213 0x2C  error 23
-        // NTAG 215 0x86  error
-        // NTAG 216 0xE6  error
-        //for (byte b = -127; b < 128; b++) {
-        byte b = 0x04;
-        String data = HfrdApi.read(deviceId, b);
-        System.out.println("data: " + data + " addr: " + b);
         //}
-        boolean result = HfrdApi.close(deviceId);
+        boolean result = HfrdApi.close();
         Assertions.assertTrue(result);
     }
 
@@ -91,7 +95,7 @@ class HfrdApiTest {
 
     @Test
     void fastRead() {
-        long deviceId = HfrdApi.connect(-1L);
+        long deviceId = HfrdApi.connect();
         Assertions.assertTrue(deviceId >= 0);
 
         // HfrdApi.beep(deviceId);
@@ -108,7 +112,7 @@ class HfrdApiTest {
         String data = HfrdApi.fastRead(deviceId, b, b2);
         System.out.println("data: " + data + " addr: " + b);
         //}
-        boolean result = HfrdApi.close(deviceId);
+        boolean result = HfrdApi.close();
         Assertions.assertTrue(result);
     }
 }
