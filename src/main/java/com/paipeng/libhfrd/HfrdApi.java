@@ -65,6 +65,11 @@ public class HfrdApi {
         int TyA_CS_Write(long device, byte block, byte[] pData);
 
         int TyA_UID_Write(long device, byte[] pData);
+
+
+        // NTAG
+        int TyA_NTAG_AnticollSelect(long device, byte[] pSnr, byte[] pLen);
+        int TyA_NTAG_GetVersion(long device, byte[] pData, byte[] pLen);
     }
 
     public static long connect(long deviceId) {
@@ -250,27 +255,69 @@ public class HfrdApi {
                     } catch (InterruptedException e) {
                     }
                 } else {
-                    //Anticollision
-                    status = HrfdLib.INSTANCE.TyA_Anticollision(deviceId, bcnt, snr, len);//return serial number of card
-                    if (status != 0 || len[0] != 4) {
-                        changeLED(deviceId, LED.LED_ORANGE, false);
-                        logger.error("TyA_Anticollision failed !");
-                        try {
-                            Thread.sleep(1000);
-                        } catch (InterruptedException e) {
+                    logger.trace("tagType: " + TagType[0]);
+
+                    if (TagType[0] == 68) {
+                        sn = readNTAGSerialNumber(deviceId);
+                        if (sn != null) {
+                            beep(deviceId);
+                            changeLED(deviceId, LED.LED_GREEN, false);
                         }
+                        return sn;
                     } else {
-                        logger.trace("anticollision len: " + len[0]);
-                        beep(deviceId);
-                        changeLED(deviceId, LED.LED_GREEN, false);
-                        String str = "";
-                        for (int i = 0; i < (int) len[0]; i++) {
-                            str = str + String.format("%02X", snr[i]);
+                        //Anticollision
+                        status = HrfdLib.INSTANCE.TyA_Anticollision(deviceId, bcnt, snr, len);//return serial number of card
+                        if (status != 0 || len[0] != 4) {
+                            changeLED(deviceId, LED.LED_ORANGE, false);
+                            logger.error("TyA_Anticollision failed !");
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException e) {
+                            }
+                        } else {
+                            logger.trace("anticollision len: " + len[0]);
+                            beep(deviceId);
+                            changeLED(deviceId, LED.LED_GREEN, false);
+                            String str = "";
+                            for (int i = 0; i < (int) len[0]; i++) {
+                                str = str + String.format("%02X", snr[i]);
+                            }
+                            sn = str;
+                            break;
                         }
-                        sn = str;
-                        break;
                     }
                 }
+            }
+        }
+
+        return sn;
+    }
+
+
+    public static String readNTAGSerialNumber(long deviceId) {
+        String sn = null;
+        int status = 0;
+        byte mode = 0x52;
+        short[] TagType = new short[1];
+
+        byte bcnt = 0;
+        byte snr[] = new byte[16];
+        byte len[] = new byte[1];
+        byte sak[] = new byte[1];
+
+        // deviceId = connect(deviceId);
+        if (deviceId >= 0) {
+            status = HrfdLib.INSTANCE.TyA_NTAG_AnticollSelect(deviceId, snr, len);
+            if (status != 0) {
+                logger.error("read TyA_NTAG_AnticollSelect error: " + status);
+                return null;
+            } else {
+                logger.trace("len: " + len[0]);
+                String str = "";
+                for (int i = 0; i < (int) len[0]; i++) {
+                    str = str + String.format("%02X", snr[i]);
+                }
+                sn = str;
             }
         }
 
