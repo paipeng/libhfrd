@@ -373,7 +373,7 @@ public class HfrdApi {
 
 
 
-    public static String fastRead(long deviceId, byte startAddr, byte stopAddr) {
+    public static String fastRead(byte startAddr, byte stopAddr) {
         String dataString = null;
         byte[] data = new byte[4*(stopAddr - startAddr + 1)];
         byte[] len = new byte[1];

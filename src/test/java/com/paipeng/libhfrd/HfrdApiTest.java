@@ -72,15 +72,13 @@ class HfrdApiTest {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
             }
-            // NTAG 213 0x2C  error 23
-            // NTAG 215 0x86  error
-            // NTAG 216 0xE6  error
-            //for (byte b = -127; b < 128; b++) {
+            // NTAG 213 0x00 - 0x2C
+            // NTAG 215 0x00 - 0x86
+            // NTAG 216 0x00 - 0xE6
             byte b = 0x04;
             String data = HfrdApi.read(b);
             System.out.println("data: " + data + " addr: " + b);
         }
-        //}
         boolean result = HfrdApi.close();
         Assertions.assertTrue(result);
     }
@@ -95,23 +93,20 @@ class HfrdApiTest {
 
     @Test
     void fastRead() {
-        long deviceId = HfrdApi.connect();
-        Assertions.assertTrue(deviceId >= 0);
-
-        // HfrdApi.beep(deviceId);
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
+        String serialNumber = HfrdApi.requestCard();
+        if (serialNumber == null) {
+            logger.error("read requestCard error");
+            return;
+        } else {
+            // NTAG 213 0x2C  error 23
+            // NTAG 215 0x86  error
+            // NTAG 216 0xE6  error
+            //for (byte b = -127; b < 128; b++) {
+            byte b = 0x00;
+            byte b2 = 0x03;
+            String data = HfrdApi.fastRead(b, b2);
+            System.out.println("data: " + data + " addr: " + b);
         }
-        // NTAG 213 0x2C  error 23
-        // NTAG 215 0x86  error
-        // NTAG 216 0xE6  error
-        //for (byte b = -127; b < 128; b++) {
-        byte b = 0x00;
-        byte b2 = 0x03;
-        String data = HfrdApi.fastRead(deviceId, b, b2);
-        System.out.println("data: " + data + " addr: " + b);
-        //}
         boolean result = HfrdApi.close();
         Assertions.assertTrue(result);
     }
