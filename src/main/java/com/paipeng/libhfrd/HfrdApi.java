@@ -1,6 +1,7 @@
 package com.paipeng.libhfrd;
 
 import com.sun.jna.Native;
+import com.sun.jna.NativeLibrary;
 import com.sun.jna.win32.StdCallLibrary;
 
 import org.slf4j.Logger;
@@ -11,6 +12,16 @@ public class HfrdApi {
     public static Logger logger = LoggerFactory.getLogger(HfrdApi.class);
     private static final String LIB_NAME = "hfrdapi";
 
+    private static void setupNativeLibrary() {
+        logger.trace("setupNativeLibrary");
+        NativeLibrary.addSearchPath(LIB_NAME, "./libs");
+        //System.setProperty("jna.library.path", "");
+        //NativeLibrary.addSearchPath(LIB_NAME, "");
+    }
+
+    static {
+        setupNativeLibrary();
+    }
     //Load DLL Library
     public interface HrfdLib extends StdCallLibrary {
         HrfdLib INSTANCE = Native.load(LIB_NAME, HrfdLib.class);
@@ -47,42 +58,38 @@ public class HfrdApi {
         int TyA_UID_Write(long device, byte[] pData);
     }
 
-    public static boolean connect(long deviceId) {
+    public static long connect(long deviceId) {
         int status;
         boolean bStatus;
-        long[] deviceIds = new long[1];
+        long[] deviceIds = new long[]{-1};
+       // long g_hDevice[] = new long[]{-1}; //hDevice must init as -1
+        deviceIds[0] = deviceId;
 
         //=================== Connect the reader ===================
         //Check whether the reader is connected or not
         //If the reader is already open , close it firstly
         bStatus = HrfdLib.INSTANCE.Sys_IsOpen(deviceId);
         if (bStatus == true) {
-            /*
-            deviceIds[0] = deviceId;
-            status = HrfdLib.INSTANCE.Sys_Close(deviceIds);
-            if(status != 0)
-            {
-                return null;
-            }
-
-             */
-
-            return true;
+            logger.trace("is opened");
+            return deviceId;
         } else {
+            logger.trace("opening...");
             //Connect
             status = HrfdLib.INSTANCE.Sys_Open(deviceIds, 0, (short) 0x0416, (short) 0x8020);
             if (status != 0) {
                 logger.error("open device error: " + status);
-                return false;
+                return deviceIds[0];
             }
         }
 
+        logger.trace("deviceId: " + deviceIds[0]);
+
         //========== Init the reader before operating the card ==========
         //Close antenna of the reader
-        status = HrfdLib.INSTANCE.Sys_SetAntenna(deviceId, (byte) 0);
+        status = HrfdLib.INSTANCE.Sys_SetAntenna(deviceIds[0], (byte) 0);
         if (status != 0) {
             logger.trace("Sys_SetAntenna failed !");
-            return false;
+            return  deviceIds[0];
         }
         //Appropriate delay after Sys_SetAntenna operating
         try {
@@ -91,10 +98,10 @@ public class HfrdApi {
         }
 
         //Set the reader's working mode
-        status = HrfdLib.INSTANCE.Sys_InitType(deviceId, (byte) 'A');
+        status = HrfdLib.INSTANCE.Sys_InitType(deviceIds[0], (byte) 'A');
         if (status != 0) {
             logger.trace("Sys_InitType failed !");
-            return false;
+            return  deviceIds[0];
         }
         //Appropriate delay after Sys_SetAntenna operating
         try {
@@ -103,10 +110,10 @@ public class HfrdApi {
         }
 
         //Open antenna of the reader
-        status = HrfdLib.INSTANCE.Sys_SetAntenna(deviceId, (byte) 1);
+        status = HrfdLib.INSTANCE.Sys_SetAntenna(deviceIds[0], (byte) 1);
         if (status != 0) {
             logger.trace("Sys_SetAntenna failed !");
-            return false;
+            return  deviceIds[0];
         }
         //Appropriate delay after Sys_SetAntenna operating
         try {
@@ -116,22 +123,23 @@ public class HfrdApi {
 
         //==================== Success Tips ====================
         //Beep 200 ms
-        status = HrfdLib.INSTANCE.Sys_SetBuzzer(deviceId, (byte) 20);
+        status = HrfdLib.INSTANCE.Sys_SetBuzzer(deviceIds[0], (byte) 20);
         if (status != 0) {
             logger.trace("Sys_SetBuzzer failed !");
-            return false;
+            return  deviceIds[0];
         }
 
         //Tips
         logger.trace("Connect reader succeed !");
 
-        return true;
+        return deviceIds[0];
     }
 
     public static boolean close(long deviceId) {
         int status;
         boolean bStatus;
-        long[] deviceIds = new long[1];
+        long[] deviceIds = new long[]{-1};
+        deviceIds[0] = deviceId;
 
         //=================== Connect the reader ===================
         //Check whether the reader is connected or not
@@ -154,10 +162,14 @@ public class HfrdApi {
     public static String getVersion(long deviceId) {
         int status;
         boolean bStatus;
-        long[] deviceIds = new long[1];
         String version;
-        if (connect(deviceId)) {
-            version = "";
+        int[] v = new int[3];
+
+        deviceId = connect(deviceId);
+        if (deviceId >= 0) {
+            HrfdLib.INSTANCE.Sys_GetLibVersion(v);
+            logger.trace("version: " + v[0] + "." + v[1] + "." + v[2]);
+            version = v[0] + "." + v[1] + "." + v[2];
         } else {
             version = null;
         }
