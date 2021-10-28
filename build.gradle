@@ -1,0 +1,21 @@
+plugins {
+    id 'java'
+}
+
+group 'com.paipeng'
+version '1.0.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation group: 'net.java.dev.jna', name: 'jna', version: '5.9.0'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+}
+
+test {
+    useJUnitPlatform()
+}
