@@ -19,6 +19,13 @@ public class HfrdApi {
         //NativeLibrary.addSearchPath(LIB_NAME, "");
     }
 
+    public enum LED {
+        LED_OFF,
+        LED_RED,
+        LED_GREEN,
+        LED_ORANGE
+    }
+
     static {
         setupNativeLibrary();
     }
@@ -123,11 +130,14 @@ public class HfrdApi {
 
         //==================== Success Tips ====================
         //Beep 200 ms
+        /*
         status = HrfdLib.INSTANCE.Sys_SetBuzzer(deviceIds[0], (byte) 20);
         if (status != 0) {
             logger.trace("Sys_SetBuzzer failed !");
             return  deviceIds[0];
         }
+
+         */
 
         //Tips
         logger.trace("Connect reader succeed !");
@@ -160,8 +170,6 @@ public class HfrdApi {
     }
 
     public static String getVersion(long deviceId) {
-        int status;
-        boolean bStatus;
         String version;
         int[] v = new int[3];
 
@@ -170,10 +178,27 @@ public class HfrdApi {
             HrfdLib.INSTANCE.Sys_GetLibVersion(v);
             logger.trace("version: " + v[0] + "." + v[1] + "." + v[2]);
             version = v[0] + "." + v[1] + "." + v[2];
+            close(deviceId);
         } else {
             version = null;
         }
 
         return version;
+    }
+
+    /**
+     *         // color 0: LED OFF
+     *         // color 1: LED ON RED
+     *         // color 2: LED ON GREEN
+     *         // color 3: LED ON ORANGE (RED/YELLOW)
+     * @param deviceId
+     * @param color
+     */
+    public static void changeLED(long deviceId, LED color) {
+        deviceId = connect(deviceId);
+        if (deviceId >= 0) {
+            HrfdLib.INSTANCE.Sys_SetLight(deviceId, (byte)color.ordinal());
+            close(deviceId);
+        }
     }
 }

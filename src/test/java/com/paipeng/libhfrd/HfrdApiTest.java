@@ -3,8 +3,6 @@ package com.paipeng.libhfrd;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 class HfrdApiTest {
 
     @Test
@@ -17,7 +15,7 @@ class HfrdApiTest {
         } catch (InterruptedException e) {
         }
 
-        boolean result = HfrdApi.close(-1L);
+        boolean result = HfrdApi.close(deviceId);
         Assertions.assertTrue(result);
     }
 
@@ -25,5 +23,24 @@ class HfrdApiTest {
     void getVersion() {
         String version = HfrdApi.getVersion(-1L);
         System.out.println("version: " + version);
+    }
+
+    @Test
+    void connect() {
+    }
+
+    @Test
+    void close() {
+    }
+
+    @Test
+    void changeLED() {
+        long deviceId = -1L;
+        byte color = 2;
+        // color 0: LED OFF
+        // color 1: LED ON RED
+        // color 2: LED ON GREEN
+        // color 3: LED ON ORANGE (RED/YELLOW)
+        HfrdApi.changeLED(deviceId, HfrdApi.LED.LED_RED);
     }
 }
