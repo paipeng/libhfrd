@@ -207,6 +207,20 @@ public class HfrdApi {
         }
     }
 
+    public static void beep(long deviceId) {
+        int status = 0;
+        deviceId = connect(deviceId);
+        if (deviceId >= 0) {
+            //==================== Success Tips ====================
+            //Beep 200 ms 20
+            // 400 ms -> 40
+            status = HrfdLib.INSTANCE.Sys_SetBuzzer(deviceId, (byte) 40);
+            if (status != 0) {
+                logger.trace("Sys_SetBuzzer failed !");
+            }
+        }
+    }
+
     public static String requestCard(long deviceId) {
         String sn = null;
         int status = 0;
@@ -247,6 +261,7 @@ public class HfrdApi {
                         }
                     } else {
                         logger.trace("anticollision len: " + len[0]);
+                        beep(deviceId);
                         changeLED(deviceId, LED.LED_GREEN, false);
                         String str = "";
                         for (int i = 0; i < (int) len[0]; i++) {
