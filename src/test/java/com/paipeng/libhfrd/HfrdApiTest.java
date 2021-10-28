@@ -41,6 +41,13 @@ class HfrdApiTest {
         // color 1: LED ON RED
         // color 2: LED ON GREEN
         // color 3: LED ON ORANGE (RED/YELLOW)
-        HfrdApi.changeLED(deviceId, HfrdApi.LED.LED_RED);
+        HfrdApi.changeLED(deviceId, HfrdApi.LED.LED_RED, true);
+    }
+
+    @Test
+    void requestCard() {
+        long deviceId = -1L;
+        String serialNumber = HfrdApi.requestCard(deviceId);
+        System.out.println("serialNumber: " + serialNumber);
     }
 }

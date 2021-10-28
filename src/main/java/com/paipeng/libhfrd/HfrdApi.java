@@ -29,11 +29,13 @@ public class HfrdApi {
     static {
         setupNativeLibrary();
     }
+
     //Load DLL Library
     public interface HrfdLib extends StdCallLibrary {
         HrfdLib INSTANCE = Native.load(LIB_NAME, HrfdLib.class);
 
         int Sys_GetLibVersion(int[] version);
+
         int Sys_Open(long[] device, int index, short vid, short pid);
 
         int Sys_Close(long[] device);
@@ -69,7 +71,7 @@ public class HfrdApi {
         int status;
         boolean bStatus;
         long[] deviceIds = new long[]{-1};
-       // long g_hDevice[] = new long[]{-1}; //hDevice must init as -1
+        // long g_hDevice[] = new long[]{-1}; //hDevice must init as -1
         deviceIds[0] = deviceId;
 
         //=================== Connect the reader ===================
@@ -96,7 +98,7 @@ public class HfrdApi {
         status = HrfdLib.INSTANCE.Sys_SetAntenna(deviceIds[0], (byte) 0);
         if (status != 0) {
             logger.trace("Sys_SetAntenna failed !");
-            return  deviceIds[0];
+            return deviceIds[0];
         }
         //Appropriate delay after Sys_SetAntenna operating
         try {
@@ -108,7 +110,7 @@ public class HfrdApi {
         status = HrfdLib.INSTANCE.Sys_InitType(deviceIds[0], (byte) 'A');
         if (status != 0) {
             logger.trace("Sys_InitType failed !");
-            return  deviceIds[0];
+            return deviceIds[0];
         }
         //Appropriate delay after Sys_SetAntenna operating
         try {
@@ -120,7 +122,7 @@ public class HfrdApi {
         status = HrfdLib.INSTANCE.Sys_SetAntenna(deviceIds[0], (byte) 1);
         if (status != 0) {
             logger.trace("Sys_SetAntenna failed !");
-            return  deviceIds[0];
+            return deviceIds[0];
         }
         //Appropriate delay after Sys_SetAntenna operating
         try {
@@ -187,18 +189,76 @@ public class HfrdApi {
     }
 
     /**
-     *         // color 0: LED OFF
-     *         // color 1: LED ON RED
-     *         // color 2: LED ON GREEN
-     *         // color 3: LED ON ORANGE (RED/YELLOW)
+     * // color 0: LED OFF
+     * // color 1: LED ON RED
+     * // color 2: LED ON GREEN
+     * // color 3: LED ON ORANGE (RED/YELLOW)
+     *
      * @param deviceId
      * @param color
      */
-    public static void changeLED(long deviceId, LED color) {
+    public static void changeLED(long deviceId, LED color, boolean close) {
         deviceId = connect(deviceId);
         if (deviceId >= 0) {
-            HrfdLib.INSTANCE.Sys_SetLight(deviceId, (byte)color.ordinal());
-            close(deviceId);
+            HrfdLib.INSTANCE.Sys_SetLight(deviceId, (byte) color.ordinal());
+            if (close) {
+                close(deviceId);
+            }
         }
+    }
+
+    public static String requestCard(long deviceId) {
+        String sn = null;
+        int status = 0;
+        byte mode = 0x52;
+        short[] TagType = new short[1];
+
+        byte bcnt = 0;
+        byte snr[] = new byte[16];
+        byte len[] = new byte[1];
+        byte sak[] = new byte[1];
+
+        deviceId = connect(deviceId);
+        if (deviceId >= 0) {
+            while (true) {
+                changeLED(deviceId, LED.LED_RED, false);
+                //Request card
+                try {
+                    status = HrfdLib.INSTANCE.TyA_Request(deviceId, mode, TagType);//search all card
+                } catch (Exception e) {
+                    logger.error(e.getLocalizedMessage());
+                }
+                if (status != 0) {
+                    logger.error("TyA_Request failed: " + status);
+                    changeLED(deviceId, LED.LED_ORANGE, false);
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                    }
+                } else {
+                    //Anticollision
+                    status = HrfdLib.INSTANCE.TyA_Anticollision(deviceId, bcnt, snr, len);//return serial number of card
+                    if (status != 0 || len[0] != 4) {
+                        changeLED(deviceId, LED.LED_ORANGE, false);
+                        logger.error("TyA_Anticollision failed !");
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e) {
+                        }
+                    } else {
+                        logger.trace("anticollision len: " + len[0]);
+                        changeLED(deviceId, LED.LED_GREEN, false);
+                        String str = "";
+                        for (int i = 0; i < (int) len[0]; i++) {
+                            str = str + String.format("%02X", snr[i]);
+                        }
+                        sn = str;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return sn;
     }
 }
