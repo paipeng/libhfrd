@@ -335,8 +335,6 @@ public class HfrdApi {
                     str = str + String.format("%02X", snr[i]);
                 }
                 sn = str;
-
-
                 status = HrfdLib.INSTANCE.TyA_NTAG_GetVersion(deviceId, data, len);
                 if (status != 0) {
                     logger.error("read TyA_NTAG_GetVersion error: " + status);
@@ -349,16 +347,53 @@ public class HfrdApi {
                 }
             }
         }
-
         return sn;
     }
 
-    public static String readData(long deviceId) {
+    public static String read(long deviceId, byte addr) {
+        String dataString = null;
+        byte[] data = new byte[16];
+        byte[] len = new byte[1];
+        int status;
         if (deviceId >= 0) {
-
+            status = HrfdLib.INSTANCE.TyA_NTAG_Read(deviceId, addr, data, len);
+            if (status != 0) {
+                logger.error("TyA_NTAG_Read error: " + status);
+            } else {
+                logger.trace("len: " + len);
+                String str = "";
+                for (int i = 0; i < (int) len[0]; i++) {
+                    str = str + String.format("%02X", data[i]);
+                }
+                dataString = str;
+            }
         }
-        return null;
+        return dataString;
     }
+
+
+
+    public static String fastRead(long deviceId, byte startAddr, byte stopAddr) {
+        String dataString = null;
+        byte[] data = new byte[4*(stopAddr - startAddr + 1)];
+        byte[] len = new byte[1];
+        int status;
+        if (deviceId >= 0) {
+            status = HrfdLib.INSTANCE.TyA_NTAG_FastRead(deviceId, startAddr, stopAddr, data, len);
+            if (status != 0) {
+                logger.error("TyA_NTAG_Read error: " + status);
+            } else {
+                logger.trace("len: " + len);
+                String str = "";
+                for (int i = 0; i < (int) len[0]; i++) {
+                    str = str + String.format("%02X", data[i]);
+                }
+                dataString = str;
+            }
+        }
+        return dataString;
+    }
+
 
     public static boolean writeData(long deviceId, String data) {
         return false;
