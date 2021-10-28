@@ -11,6 +11,8 @@ repositories {
 
 dependencies {
     implementation group: 'net.java.dev.jna', name: 'jna', version: '5.9.0'
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.22'
+    implementation group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.22'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
