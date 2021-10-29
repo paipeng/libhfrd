@@ -85,6 +85,34 @@ class HfrdApiTest {
 
     @Test
     void writeData() {
+        byte[] payload = new byte[17];
+        int len = 0;
+        payload[len++] = (byte)0xD1;
+        payload[len++] = (byte)0x01;
+        payload[len++] = (byte)0x0D;
+        payload[len++] = (byte)0x54;
+        payload[len++] = (byte)0x02;
+
+        payload[len++] = (byte)0x7A;
+        payload[len++] = (byte)0x68;
+
+
+        payload[len++] = (byte)0x30;
+        payload[len++] = (byte)0x31;
+        payload[len++] = (byte)0x32;
+        payload[len++] = (byte)0x33;
+        payload[len++] = (byte)0x34;
+        payload[len++] = (byte)0x35;
+        payload[len++] = (byte)0x36;
+        payload[len++] = (byte)0x37;
+        payload[len++] = (byte)0x38;
+        payload[len++] = (byte)0x39;
+
+        String serialNumber = HfrdApi.requestCard();
+        if (serialNumber != null) {
+            HfrdApi.writeData(payload);
+        }
+
     }
 
     @Test

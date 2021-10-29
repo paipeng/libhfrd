@@ -401,7 +401,61 @@ public class HfrdApi {
         return false;
     }
 
-    public static boolean writeData(byte[] data) {
+    /**
+     *
+     * @param payload
+     * @return
+     */
+    public static boolean writeData(byte[] payload) {
+        byte[] data = new byte[payload.length + 7 + 1];
+        byte[] writeBuffer = new byte[4];
+        byte pageAddr;
+        int data_len = 0;
+        int status;
+        data[data_len++] = 0x01; //The factory default data of NTAG203
+        data[data_len++] = 0x03; //The factory default data of NTAG203
+        data[data_len++] = (byte)0xA0; //The factory default data of NTAG203
+        data[data_len++] = 0x10; //The factory default data of NTAG203
+        data[data_len++] = 0x44; //The factory default data of NTAG203
+        data[data_len++] = 0x03;
+        data[data_len++] = (byte)payload.length;
+
+        for (int i = 0; i < payload.length; i++) {
+            data[data_len++] = payload[i];
+        }
+
+        // ending with 0xFE
+        data[data_len++] = (byte) 0xFE;
+
+        for (int i = 0; i < data_len; i++) {
+            logger.trace(String.format("idx: %d -> %02X", i, data[i]));
+        }
+        // NTAG 213
+        if (data_len > 144) {
+            logger.error("data size too big!");
+        }
+
+        // WRITE
+        for (int i = 0; i < data_len; i += 4) {
+            pageAddr = (byte)(4+i/4); // begin to write from Page 4
+            int len = 4;
+            if ((i+4) > data_len) {
+                len = data_len - i;
+            }
+            logger.trace("write to page " + pageAddr + " len: " + len);
+            //System.arraycopy(writeBuffer, 0, data, i, (byte)len);
+            for (int j = 0; j < len; j++) {
+                writeBuffer[j] = data[i+j];
+            }
+            logger.trace(String.format("wirte data byte: %02X %02X %02X %02X", writeBuffer[0], writeBuffer[1], writeBuffer[2], writeBuffer[3]));
+            status = HrfdLib.INSTANCE.TyA_NTAG_Write(deviceId, pageAddr, writeBuffer);
+            if (status != 0) {
+                logger.error("TyA_NTAG_Write error: " + status);
+            } else {
+                logger.trace("TyA_NTAG_Write success");
+            }
+        }
+
         return false;
     }
 
