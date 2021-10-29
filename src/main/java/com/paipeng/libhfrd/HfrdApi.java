@@ -389,6 +389,9 @@ public class HfrdApi {
                 String str = "";
                 for (int i = 0; i < (int) len[0]; i++) {
                     str = str + String.format("%02X", data[i]);
+                    if (i > 0 && (i+1) % 4 == 0) {
+                        str = str + " ";
+                    }
                 }
                 dataString = str;
             }
@@ -455,10 +458,8 @@ public class HfrdApi {
                 logger.trace("TyA_NTAG_Write success");
             }
         }
-
         return false;
     }
-
 
     public static int readCount() {
         byte[] data = new byte[3];
@@ -485,4 +486,39 @@ public class HfrdApi {
             return 0;
         }
     }
+
+    /**
+     * ECC signature
+     */
+    public static int readSignature() {
+        byte[] data = new byte[32];
+        int status;
+        byte[] len = new byte[1];
+        String serialNumber = HfrdApi.requestCard();
+        logger.trace("serialNumber: " + serialNumber);
+        if (serialNumber == null) {
+            logger.error("read requestCard error");
+            return -1;
+        } else {
+            status = HrfdLib.INSTANCE.TyA_NTAG_ReadSig(deviceId, (byte)0x00, data, len);
+            if (status != 0) {
+                logger.error("TyA_NTAG_ReadCnt error: " + status);
+                return -2;
+            } else {
+                logger.trace("len: " + len[0]);
+                String str = "";
+                for (int i = 0; i < (int) len[0]; i++) {
+                    str = str + String.format("%02X", data[i]);
+                    if (i > 0 && (i+1) % 4 == 0) {
+                        str = str + " ";
+                    } else {
+                        str = str + "-";
+                    }
+                }
+                logger.trace("signature: " + str);
+                return 0;
+            }
+        }
+    }
+
 }

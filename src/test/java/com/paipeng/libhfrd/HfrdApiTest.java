@@ -146,4 +146,10 @@ class HfrdApiTest {
         int readCount = HfrdApi.readCount();
         logger.trace("readCount: " + readCount);
     }
+
+    @Test
+    void readSignature() {
+        int readCount = HfrdApi.readSignature();
+        logger.trace("readSignature: " + readCount);
+    }
 }
