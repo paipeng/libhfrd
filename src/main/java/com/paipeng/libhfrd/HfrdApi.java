@@ -502,7 +502,7 @@ public class HfrdApi {
         } else {
             status = HrfdLib.INSTANCE.TyA_NTAG_ReadSig(deviceId, (byte)0x00, data, len);
             if (status != 0) {
-                logger.error("TyA_NTAG_ReadCnt error: " + status);
+                logger.error("TyA_NTAG_ReadSig error: " + status);
                 return -2;
             } else {
                 logger.trace("len: " + len[0]);
@@ -517,6 +517,37 @@ public class HfrdApi {
                 }
                 logger.trace("signature: " + str);
                 return 0;
+            }
+        }
+    }
+
+    public static boolean validatePassword(byte[] password) {
+        byte[] data = new byte[32];
+        int status;
+        byte[] len = new byte[1];
+        String serialNumber = HfrdApi.requestCard();
+        logger.trace("serialNumber: " + serialNumber);
+        if (serialNumber == null) {
+            logger.error("read requestCard error");
+            return false;
+        } else {
+            status = HrfdLib.INSTANCE.TyA_NTAG_PwdAuth(deviceId, password, data, len);
+            if (status != 0) {
+                logger.error("TyA_NTAG_PwdAuth error: " + status);
+                return false;
+            } else {
+                logger.trace("len: " + len[0]);
+                String str = "";
+                for (int i = 0; i < (int) len[0]; i++) {
+                    str = str + String.format("%02X", data[i]);
+                    if (i > 0 && (i+1) % 4 == 0) {
+                        str = str + " ";
+                    } else {
+                        str = str + "-";
+                    }
+                }
+                logger.trace("pass data: " + str);
+                return true;
             }
         }
     }

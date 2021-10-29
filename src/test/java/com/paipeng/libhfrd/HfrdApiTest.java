@@ -152,4 +152,15 @@ class HfrdApiTest {
         int readCount = HfrdApi.readSignature();
         logger.trace("readSignature: " + readCount);
     }
+
+    @Test
+    void validatePassword() {
+        byte[] password = new byte[4];
+        password[0] = (byte) 0xFF;
+        password[1] = (byte) 0xFF;
+        password[2] = (byte) 0xFF;
+        password[3] = (byte) 0xFF;
+        boolean readCount = HfrdApi.validatePassword(password);
+        logger.trace("validatePassword: " + readCount);
+    }
 }
