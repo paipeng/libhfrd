@@ -9,14 +9,11 @@ class HfrdApiTest {
     public static Logger logger = LoggerFactory.getLogger(HfrdApiTest.class);
 
     @Test
-    public void testConnect() {
+    public void testConnect() throws InterruptedException {
         long deviceId = HfrdApi.connect();
         Assertions.assertTrue(deviceId >= 0);
 
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-        }
+        Thread.sleep(5000);
 
         boolean result = HfrdApi.close();
         Assertions.assertTrue(result);
@@ -37,13 +34,15 @@ class HfrdApiTest {
     }
 
     @Test
-    void changeLED() {
-        byte color = 2;
+    void changeLED() throws InterruptedException {
         // color 0: LED OFF
         // color 1: LED ON RED
         // color 2: LED ON GREEN
         // color 3: LED ON ORANGE (RED/YELLOW)
-        HfrdApi.changeLED(HfrdApi.LED.LED_RED, true);
+        HfrdApi.changeLED(HfrdApi.LED.LED_ORANGE, false);
+        Thread.sleep(1000);
+        HfrdApi.changeLED(HfrdApi.LED.LED_GREEN, true);
+
     }
 
     @Test
@@ -61,17 +60,14 @@ class HfrdApiTest {
     }
 
     @Test
-    void read() {
+    void read() throws InterruptedException {
         String serialNumber = HfrdApi.requestCard();
         if (serialNumber == null) {
             logger.error("read requestCard error");
             return;
         } else {
             // HfrdApi.beep(deviceId);
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-            }
+            Thread.sleep(1000);
             // NTAG 213 0x00 - 0x2C
             // NTAG 215 0x00 - 0x86
             // NTAG 216 0x00 - 0xE6
