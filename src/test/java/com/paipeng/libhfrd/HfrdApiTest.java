@@ -245,4 +245,27 @@ class HfrdApiTest {
             System.out.print(String.format("%02X ", destData2[i]));
         }
     }
+
+    @Test
+    void halt() {
+    }
+
+    @Test
+    void compWrite() {
+        byte[] data = new byte[16];
+        data[0] = 0x01;
+        data[1] = 0x02;
+        data[2] = 0x02;
+        data[3] = 0x01;
+        for (int i = 4; i < 16; i++) {
+            data[i] = 0x00;
+        }
+
+        byte addr = 0x04;
+        String serialNumber = HfrdApi.requestCard();
+        if (serialNumber != null) {
+            HfrdApi.compWrite(addr, data);
+        }
+
+    }
 }

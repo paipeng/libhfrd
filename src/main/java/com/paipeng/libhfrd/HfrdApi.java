@@ -575,6 +575,21 @@ public class HfrdApi {
         return false;
     }
 
+    public static void compWrite(byte addr, byte[] data) {
+        //CompWrite
+        int status;
+        if (deviceId >= 0) {
+            status = HrfdLib.INSTANCE.TyA_NTAG_CompWrite(deviceId, addr, data);
+            if (status != 0) {
+                logger.error("TyA_NTAG_CompWrite error: " + status);
+            } else {
+                logger.trace("TyA_NTAG_CompWrite success");
+            }
+        } else {
+            logger.error("deviceId invalid -> open");
+        }
+    }
+
     public static int readCount() {
         byte[] data = new byte[3];
         byte[] len = new byte[1];
