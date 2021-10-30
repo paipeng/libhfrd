@@ -35,9 +35,15 @@ public class HfrdApi {
     public interface HrfdLib extends StdCallLibrary {
         HrfdLib INSTANCE = Native.load(LIB_NAME, HrfdLib.class);
 
-        int Sys_GetSnr(long device, byte[]pSnr);
+        int Sys_GetSnr(long device, byte[] pSnr);
+
         int Sys_GetModel(long device, byte[] pData, byte[] pLen);
+
         int Sys_GetLibVersion(int[] version);
+
+        int Sys_UserFlash_Read(long device, short block, short startAddress, short length, byte[] pData);
+
+        int Sys_UserFlash_Write(long device, short block, short startAddress, short length, byte[] pData);
 
         int Sys_Open(long[] device, int index, short vid, short pid);
 
@@ -89,7 +95,7 @@ public class HfrdApi {
 
         int TyA_NTAG_ReadSig(long device, byte addr, byte[] pData, byte[] pLen);
 
-        int TyA_UL_ReadCnt(long device, byte addr,byte[] pData, byte[] pLen);
+        int TyA_UL_ReadCnt(long device, byte addr, byte[] pData, byte[] pLen);
 
 
     }
@@ -199,6 +205,44 @@ public class HfrdApi {
         }
     }
 
+    public static byte[] readUserFlash() {
+        String str = null;
+        byte[] data = new byte[128];
+        byte[] len = new byte[1];
+        int status;
+        if (deviceId >= 0) {
+            status = HrfdLib.INSTANCE.Sys_UserFlash_Read(deviceId, (short)0, (short)0, (short)128, data);
+            if (status != 0) {
+                logger.error("Sys_UserFlash_Read error: " + status);
+            } else {
+                str = "";
+                for (int i = 0; i < 128; i++) {
+                    str = str + String.format("%02X", data[i]);
+                    if (i > 0 && (i + 1) % 4 == 0) {
+                        str = str + " ";
+                    }
+                }
+                logger.trace("userFlash data: " + str);
+
+            }
+        }
+        return null;
+    }
+
+    public static int writeUserFlash(byte[] data) {
+        int status;
+        if (deviceId >= 0) {
+            status = HrfdLib.INSTANCE.Sys_UserFlash_Write(deviceId, (short)0, (short)0, (short)128, data);
+            if (status != 0) {
+                logger.error("Sys_UserFlash_Read error: " + status);
+                return -1;
+            } else {
+                logger.trace("write user flash success!");
+            }
+        }
+        return 1;
+    }
+
     public static String getDeviceModel() {
         String str = null;
         byte[] data = new byte[10];
@@ -222,6 +266,7 @@ public class HfrdApi {
         return str;
 
     }
+
     public static String getDeviceSerialNumber() {
         String str = null;
         byte[] sn = new byte[4];
@@ -242,7 +287,6 @@ public class HfrdApi {
         }
         return str;
     }
-
 
 
     public static String getVersion() {
@@ -442,7 +486,7 @@ public class HfrdApi {
                 String str = "";
                 for (int i = 0; i < (int) len[0]; i++) {
                     str = str + String.format("%02X", data[i]);
-                    if (i > 0 && (i+1) % 4 == 0) {
+                    if (i > 0 && (i + 1) % 4 == 0) {
                         str = str + " ";
                     }
                 }
@@ -458,7 +502,6 @@ public class HfrdApi {
     }
 
     /**
-     *
      * @param payload
      * @return
      */
@@ -470,11 +513,11 @@ public class HfrdApi {
         int status;
         data[data_len++] = 0x01; //The factory default data of NTAG203
         data[data_len++] = 0x03; //The factory default data of NTAG203
-        data[data_len++] = (byte)0xA0; //The factory default data of NTAG203
+        data[data_len++] = (byte) 0xA0; //The factory default data of NTAG203
         data[data_len++] = 0x10; //The factory default data of NTAG203
         data[data_len++] = 0x44; //The factory default data of NTAG203
         data[data_len++] = 0x03;
-        data[data_len++] = (byte)payload.length;
+        data[data_len++] = (byte) payload.length;
 
         for (int i = 0; i < payload.length; i++) {
             data[data_len++] = payload[i];
@@ -493,15 +536,15 @@ public class HfrdApi {
 
         // WRITE
         for (int i = 0; i < data_len; i += 4) {
-            pageAddr = (byte)(4+i/4); // begin to write from Page 4
+            pageAddr = (byte) (4 + i / 4); // begin to write from Page 4
             int len = 4;
-            if ((i+4) > data_len) {
+            if ((i + 4) > data_len) {
                 len = data_len - i;
             }
             logger.trace("write to page " + pageAddr + " len: " + len);
             //System.arraycopy(writeBuffer, 0, data, i, (byte)len);
             for (int j = 0; j < len; j++) {
-                writeBuffer[j] = data[i+j];
+                writeBuffer[j] = data[i + j];
             }
             logger.trace(String.format("wirte data byte: %02X %02X %02X %02X", writeBuffer[0], writeBuffer[1], writeBuffer[2], writeBuffer[3]));
             status = HrfdLib.INSTANCE.TyA_NTAG_Write(deviceId, pageAddr, writeBuffer);
@@ -525,7 +568,7 @@ public class HfrdApi {
             return -1;
         } else {
             //status = HrfdLib.INSTANCE.TyA_NTAG_ReadCnt(deviceId, (byte)0x02, data, len);
-            status = HrfdLib.INSTANCE.TyA_UL_ReadCnt(deviceId, (byte)0x00, data, len);
+            status = HrfdLib.INSTANCE.TyA_UL_ReadCnt(deviceId, (byte) 0x00, data, len);
 
             if (status != 0) {
                 logger.error("TyA_NTAG_ReadCnt error: " + status);
@@ -555,7 +598,7 @@ public class HfrdApi {
             logger.error("read requestCard error");
             return -1;
         } else {
-            status = HrfdLib.INSTANCE.TyA_NTAG_ReadSig(deviceId, (byte)0x00, data, len);
+            status = HrfdLib.INSTANCE.TyA_NTAG_ReadSig(deviceId, (byte) 0x00, data, len);
             if (status != 0) {
                 logger.error("TyA_NTAG_ReadSig error: " + status);
                 return -2;
@@ -564,7 +607,7 @@ public class HfrdApi {
                 String str = "";
                 for (int i = 0; i < (int) len[0]; i++) {
                     str = str + String.format("%02X", data[i]);
-                    if (i > 0 && (i+1) % 4 == 0) {
+                    if (i > 0 && (i + 1) % 4 == 0) {
                         str = str + " ";
                     } else {
                         str = str + "-";
@@ -595,7 +638,7 @@ public class HfrdApi {
                 String str = "";
                 for (int i = 0; i < (int) len[0]; i++) {
                     str = str + String.format("%02X", data[i]);
-                    if (i > 0 && (i+1) % 4 == 0) {
+                    if (i > 0 && (i + 1) % 4 == 0) {
                         str = str + " ";
                     } else {
                         str = str + "-";

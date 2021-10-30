@@ -183,4 +183,31 @@ class HfrdApiTest {
         boolean result = HfrdApi.close();
         Assertions.assertTrue(result);
     }
+
+    @Test
+    void readUserFlash() {
+        long deviceId = HfrdApi.connect();
+        Assertions.assertTrue(deviceId >= 0);
+
+        byte[] userData = HfrdApi.readUserFlash();
+
+        boolean result = HfrdApi.close();
+        Assertions.assertTrue(result);
+    }
+
+    @Test
+    void writeUserFlash() {
+        long deviceId = HfrdApi.connect();
+        Assertions.assertTrue(deviceId >= 0);
+
+        byte[] data = new byte[128];
+        for (int i = 0; i < data.length; i++) {
+            data[i] = (byte)i;
+        }
+        int ret = HfrdApi.writeUserFlash(data);
+        Assertions.assertEquals(ret, 1);
+
+        boolean result = HfrdApi.close();
+        Assertions.assertTrue(result);
+    }
 }
