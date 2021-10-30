@@ -183,6 +183,22 @@ public class HfrdApi {
         return deviceIds[0];
     }
 
+    public static boolean halt() {
+        int status;
+        if (deviceId >=0) {
+            status = HrfdLib.INSTANCE.TyA_Halt(deviceId);
+            if (status != 0) {
+                logger.error("TyA_Halt error: " + status);
+                return false;
+            } else {
+                logger.trace("TyA_Halt success");
+                return true;
+            }
+        } else {
+            return false;
+        }
+    }
+
     public static boolean close() {
         int status;
         boolean bStatus;
