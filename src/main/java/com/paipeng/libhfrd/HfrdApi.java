@@ -35,6 +35,8 @@ public class HfrdApi {
     public interface HrfdLib extends StdCallLibrary {
         HrfdLib INSTANCE = Native.load(LIB_NAME, HrfdLib.class);
 
+        int Sys_GetSnr(long device, byte[]pSnr);
+        int Sys_GetModel(long device, byte[] pData, byte[] pLen);
         int Sys_GetLibVersion(int[] version);
 
         int Sys_Open(long[] device, int index, short vid, short pid);
@@ -116,6 +118,7 @@ public class HfrdApi {
             }
         }
 
+        HfrdApi.deviceId = deviceIds[0];
         logger.trace("deviceId: " + deviceIds[0]);
 
         //========== Init the reader before operating the card ==========
@@ -195,6 +198,52 @@ public class HfrdApi {
             return true;
         }
     }
+
+    public static String getDeviceModel() {
+        String str = null;
+        byte[] data = new byte[10];
+        byte[] len = new byte[1];
+        int status;
+        if (deviceId >= 0) {
+            status = HrfdLib.INSTANCE.Sys_GetModel(deviceId, data, len);
+            if (status != 0) {
+                logger.error("Sys_GetSnr error: " + status);
+            } else {
+                logger.trace("len: " + len[0]);
+                str = "";
+                for (int i = 0; i < len[0]; i++) {
+                    str = str + String.format("%02X", data[i]);
+                }
+                logger.trace("device SN: " + str);
+            }
+        } else {
+            logger.error("deviceId invalid: " + deviceId);
+        }
+        return str;
+
+    }
+    public static String getDeviceSerialNumber() {
+        String str = null;
+        byte[] sn = new byte[4];
+        int status;
+        if (deviceId >= 0) {
+            status = HrfdLib.INSTANCE.Sys_GetSnr(deviceId, sn);
+            if (status != 0) {
+                logger.error("Sys_GetSnr error: " + status);
+            } else {
+                str = "";
+                for (int i = 0; i < 4; i++) {
+                    str = str + String.format("%02X", sn[i]);
+                }
+                logger.trace("device SN: " + str);
+            }
+        } else {
+            logger.error("deviceId invalid: " + deviceId);
+        }
+        return str;
+    }
+
+
 
     public static String getVersion() {
         String version;

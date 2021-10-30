@@ -13,7 +13,7 @@ class HfrdApiTest {
         long deviceId = HfrdApi.connect();
         Assertions.assertTrue(deviceId >= 0);
 
-        Thread.sleep(5000);
+        Thread.sleep(1000);
 
         boolean result = HfrdApi.close();
         Assertions.assertTrue(result);
@@ -158,5 +158,29 @@ class HfrdApiTest {
         password[3] = (byte) 0xFF;
         boolean readCount = HfrdApi.validatePassword(password);
         logger.trace("validatePassword: " + readCount);
+    }
+
+    @Test
+    void getDeviceSerialNumber() {
+        long deviceId = HfrdApi.connect();
+        Assertions.assertTrue(deviceId >= 0);
+
+        String deviceSerialNumber = HfrdApi.getDeviceSerialNumber();
+        logger.trace("deviceSerialNumber: " + deviceSerialNumber);
+
+        boolean result = HfrdApi.close();
+        Assertions.assertTrue(result);
+    }
+
+    @Test
+    void getDeviceModel() {
+        long deviceId = HfrdApi.connect();
+        Assertions.assertTrue(deviceId >= 0);
+
+        String deviceModel = HfrdApi.getDeviceModel();
+        logger.trace("deviceModel: " + deviceModel);
+
+        boolean result = HfrdApi.close();
+        Assertions.assertTrue(result);
     }
 }
