@@ -214,9 +214,12 @@ class HfrdApiTest {
     @Test
     void des() {
         byte[] key = new byte[8];
-        byte[] data = new byte[8];
+        byte[] data = new byte[9];
         for (int i = 0; i < key.length; i++) {
             key[i] = (byte)i;
+        }
+
+        for (int i = 0; i < data.length; i++) {
             data[i] =  (byte)(255 - i);
         }
         System.out.println("data: ");
