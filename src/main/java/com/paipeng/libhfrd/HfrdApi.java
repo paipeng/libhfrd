@@ -86,6 +86,10 @@ public class HfrdApi {
         int TyA_NTAG_PwdAuth(long device, byte[] pPwd, byte[] pData, byte[] pLen);
 
         int TyA_NTAG_ReadSig(long device, byte addr, byte[] pData, byte[] pLen);
+
+        int TyA_UL_ReadCnt(long device, byte addr,byte[] pData, byte[] pLen);
+
+
     }
 
     public static long connect() {
@@ -471,7 +475,9 @@ public class HfrdApi {
             logger.error("read requestCard error");
             return -1;
         } else {
-            status = HrfdLib.INSTANCE.TyA_NTAG_ReadCnt(deviceId, (byte)0x02, data, len);
+            //status = HrfdLib.INSTANCE.TyA_NTAG_ReadCnt(deviceId, (byte)0x02, data, len);
+            status = HrfdLib.INSTANCE.TyA_UL_ReadCnt(deviceId, (byte)0x00, data, len);
+
             if (status != 0) {
                 logger.error("TyA_NTAG_ReadCnt error: " + status);
                 return -2;
