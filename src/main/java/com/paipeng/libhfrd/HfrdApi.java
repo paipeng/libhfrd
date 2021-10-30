@@ -59,6 +59,8 @@ public class HfrdApi {
 
         int Sys_InitType(long device, byte type);
 
+        int Aux_SingleDES(byte desType, byte[] key, byte[] srcData, int srcDataLen, byte[] destData, int[] destDataLen);
+
         int TyA_Request(long device, byte mode, short[] pTagType);
 
         int TyA_Anticollision(long device, byte bcnt, byte[] pSnr, byte[] pLen);
@@ -647,6 +649,31 @@ public class HfrdApi {
                 logger.trace("pass data: " + str);
                 return true;
             }
+        }
+    }
+
+    public static byte[] des(byte mode, byte[] key, byte[] data) {
+        int len = (data.length%8> 0) ? ((data.length/8 + 1) * 8) : data.length;
+        byte[] destData = new byte[len];
+        int[] destDataLen = new int[1];
+        int status = HrfdLib.INSTANCE.Aux_SingleDES(mode, key, data, data.length, destData, destDataLen);
+        if (status != 0) {
+            logger.error("Aux_SingleDES error: " + status);
+            return null;
+        } else {
+            logger.trace("destData len: " + destDataLen[0]);
+            String str = "";
+            for (int i = 0; i < (int) destDataLen[0]; i++) {
+                str = str + String.format("%02X", data[i]);
+                if (i > 0 && (i + 1) % 4 == 0) {
+                    str = str + " ";
+                } else {
+                    str = str + "-";
+                }
+            }
+            logger.trace("pass data: " + str);
+
+            return destData;
         }
     }
 

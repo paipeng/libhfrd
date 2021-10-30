@@ -210,4 +210,36 @@ class HfrdApiTest {
         boolean result = HfrdApi.close();
         Assertions.assertTrue(result);
     }
+
+    @Test
+    void des() {
+        byte[] key = new byte[8];
+        byte[] data = new byte[8];
+        for (int i = 0; i < key.length; i++) {
+            key[i] = (byte)i;
+            data[i] =  (byte)(255 - i);
+        }
+        System.out.println("data: ");
+        for (int i = 0; i < data.length; i++) {
+            System.out.print(String.format("%02X ", data[i]));
+        }
+        System.out.println("");
+
+        byte[] destData = HfrdApi.des((byte)0, key, data);
+
+        Assertions.assertNotNull(destData);
+        System.out.println("destData: ");
+        for (int i = 0; i < destData.length; i++) {
+            System.out.print(String.format("%02X ", destData[i]));
+        }
+        System.out.println("");
+        byte[] destData2 = HfrdApi.des((byte)1, key, destData);
+
+        Assertions.assertNotNull(destData2);
+
+        System.out.println("destData2: ");
+        for (int i = 0; i < destData2.length; i++) {
+            System.out.print(String.format("%02X ", destData2[i]));
+        }
+    }
 }
